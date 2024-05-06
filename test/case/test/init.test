@@ -1,0 +1,11 @@
+create table t_update_mvcc(id int, age int, name char(4));
+create unique index t_update_mvcc_id_index on t_update_mvcc(id);
+insert into t_update_mvcc values(1, 1, 'a');
+insert into t_update_mvcc values(2, 2, 'a');
+insert into t_update_mvcc values(3, 3, 'a');
+insert into t_update_mvcc values(4, 4, 'a');
+insert into t_update_mvcc values(5, 5, 'a');
+insert into t_update_mvcc values(6, 6, 'a');
+insert into t_update_mvcc values(7, 7, 'a');
+insert into t_update_mvcc values(8, 8, 'a');
+insert into t_update_mvcc values(9, 9, 'a');

@@ -1,0 +1,19 @@
+create table t1(id int, age int, name char, score float);
+insert into t1 values(1,1, 'a', 1.0);
+insert into t1 values(2,2, 'b', 2.0);
+insert into t1 values(4,4, 'c', 3.0);
+insert into t1 values(3,3, 'd', 4.0);
+insert into t1 values(5,5, 'e', 5.5);
+insert into t1 values(6,6, 'f', 6.6);
+insert into t1 values(7,7, 'g', 7.7);
+create table t2(id int, age int, name char, score float);
+insert into t2 values(1,1, 'a', 1.0);
+insert into t2 values(2,2, 'b', 2.0);
+insert into t2 values(4,4, 'c', 3.0);
+insert into t2 values(3,3, 'd', 4.0);
+insert into t2 values(5,5, 'e', 5.5);
+insert into t2 values(6,6, 'f', 6.6);
+insert into t2 values(7,7, 'g', 7.7);
+select t1.* from t1 where t1.id = (select max(t2.age) from t2 where t2.age = t1.id)
+select t1.* from t1 x where t1.id = (select count(y.age) from t2 y where y.age = x.id)
+select t1.id a, x.age b from t1 x where t1.id = (select count(y.age) from t2 y where y.age = t1.id);
