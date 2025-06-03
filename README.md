@@ -255,13 +255,13 @@ if (begin_xid > 0 && end_xid > 0) {
 1. 缺少begin < 0 && end < 0的处理，导致当前事务中写入的记录无法删除
 2. commit时存在问题，insert之后，delete的记录无法添加到operation里面，operation为一个set,但是insert时似乎无法正确添加，会导致即便修复了1, 在commit之后会出现begin = commit_id,end = -trx_id的情况，理论上这种情况不应该出现，因为delete的commit行为没有得到正确执行，如果delete的commit行为得到正确执行，就会变成begin > 0 && end > 0的情况，就可以按照版本去读取了。这里我也不知道该怎么修复了。。因为set的行为有点奇怪
     
-    !()[https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231105124219.png]
+    ![](https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231105124219.png)
     
-    !()[https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231105124249.png]
+    ![](https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231105124249.png)
     
-    !()[https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231105124421.png]
+    ![](https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231105124421.png)
     
-    !()[https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231105124430.png]
+    ![](https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231105124430.png)
     
 
 不过其中存在一定的问题，即少了对begin < 0 && end < 0的判断，在这种情况下，为当前事务写入，又被当前事务删除，但是事务还未提交，此时应当对当前事务是不可见的，但是根据目前的条件结构，会返回SUCCESS，这样会导致在当前事务中进行delete但是仍可见的问题，或者当前事务中进行update，但是旧数据还存在的问题。需要补充一条逻辑，在这种情况下返回不可见
@@ -269,11 +269,11 @@ if (begin_xid > 0 && end_xid > 0) {
 原本(4,4,'a')的record是由上一个事务写入的，并且提交(begin_xid > 0)，此时更新就不会出现问题，而(4,761,'a')的record是当前事务写入的，还为提交，begin_xid < 0,删除之后end_xid < 0，上面漏了对这种情况的判断，从而导致其又可见。
 即便如此，依旧还存在其他的问题，即如果当前的事务commit之后，这条记录就又可见了
 
-!()[https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231105004447.png]
+![](https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231105004447.png)
 
 下图是我用初始版的miniob做的测试，可以确认的确存在这个问题
 
-!()[https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/c6ff7993fbfb139743ff5b650a79a760.png]
+![](https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/c6ff7993fbfb139743ff5b650a79a760.png)
 
 回到正题，update-mvcc这题其实是不怎么需要实现的，大多数人在完成了unique之后，update-mvcc是可以直接通过的，因为目前miniob已经给出了mvcc的insert和delete实现，组合一下即可。不过由于我们队unique index实现的是一个fake版本，在mvcc模式下并没有办法提供唯一性保证，而我又不想去重构，因此我们队分了两天线进行，队友去重构unique index，我特判表名然后实现一个内存当中的mvcc版的unique index，其实就是把visit_record当中的逻辑对着unique_index实现了一遍，不过最后是我先搞出来了hhh。
 
